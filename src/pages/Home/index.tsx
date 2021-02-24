@@ -5,6 +5,7 @@ import { beerItem } from './types'
 import { newItem } from '../../store/ducks/Carrinho/actions'
 import { useDispatch } from 'react-redux';
 import { Item } from '../../store/ducks/Carrinho/types';
+import toast from 'react-hot-toast';
 
 const Home = () => {
 
@@ -13,16 +14,34 @@ const Home = () => {
     const [categories, setCategories] = useState<string[]>([])
     const [beers, setBeers] = useState<beerItem[]>([])
 
-    useEffect(() => {
-        if(token !== null) {
-            const headers = {
-                'Authorization': `Bearer ${token}`
-            }     
-            axios.get('http://localhost:4000/categories', { headers: headers })
-                .then(resposta => setCategories(resposta.data))
-            axios.get('http://localhost:4000/beers', { headers: headers })
-                .then(resposta => setBeers(resposta.data))
+    const Requisicao = async () => {
+        try {
+            if(token !== null) {
+                const headers = {
+                    'Authorization': `Bearer ${token}`
+                }     
+                const resposta_categories = await axios.get('http://localhost:4000/categories', { headers: headers })
+                setCategories(resposta_categories.data)
+    
+                const resposta_beers = await axios.get('http://localhost:4000/beers', { headers: headers })
+                setBeers(resposta_beers.data)
+            }
+        } catch (erro) {
+            if (erro.response.status === 401) {
+                toast.error('Acesso negado (token inválido)')
+            }
+            if (erro.response.status === 403) {
+                toast.error('Acesso não autorizado')
+            }
+            if (erro.response.status === 404) {
+                toast.error('Erro 404')
+            }
         }
+    
+    }
+
+    useEffect(() => {
+        Requisicao()
     }, [])
 
     const dispatch = useDispatch()
