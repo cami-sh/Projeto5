@@ -1,6 +1,7 @@
 import React, { useState , useRef } from 'react'
 import axios from 'axios'
 import { Redirect } from 'react-router-dom'
+import toast from 'react-hot-toast'
 
 const Cadastro = () => {
 
@@ -12,22 +13,33 @@ const Cadastro = () => {
     const inputPassword = useRef<HTMLInputElement>(null)
     const inputAge = useRef<HTMLInputElement>(null)
 
-    const Logar = () => {
-        const requisicao = {
-            name: inputName.current?.value,
-            email: inputEmail.current?.value,
-            password: inputPassword.current?.value,
-            age: Number(inputAge.current?.value)
-        }
-
-        if (requisicao.age >= 18) {
-            axios.post('http://localhost:4000/register', requisicao)
-                .then(resposta => {
-                    localStorage.setItem("token", resposta.data.accessToken)
-                    setLogado(true)
-                })
-        }else{
-            setErroLogin(true)
+    const Logar = async () => {
+        try {
+            const requisicao = {
+                name: inputName.current?.value,
+                email: inputEmail.current?.value,
+                password: inputPassword.current?.value,
+                age: Number(inputAge.current?.value)
+            }
+    
+            if (requisicao.age >= 18) {
+                const resposta = await axios.post('http://localhost:4000/register', requisicao)
+                localStorage.setItem("token", resposta.data.accessToken)
+                setLogado(true)
+                    
+            }else{
+                setErroLogin(true)
+            }
+        } catch (erro) {
+            if (erro.response.status === 400) {
+                toast.error('Senha muito curta! Mínimo de 4 caracteres')
+            }
+            if (erro.response.status === 403) {
+                toast.error('Acesso não autorizado')
+            }
+            if (erro.response.status === 404) {
+                toast.error('Erro 404')
+            }
         }
     }
 
